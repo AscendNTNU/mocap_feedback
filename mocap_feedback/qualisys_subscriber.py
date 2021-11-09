@@ -9,21 +9,6 @@ from rclpy.node import Node
 from geometry_msgs.msg import PoseStamped
 
 
-        
-
-
-#print("Setting origin SET_GPS_GLOBAL_ORIGIN to initialize EKF (0,0,0)")
-
-#
-#   Arm
-#
-#print("Feeding some data")
-
-#data = master.mav.att_pos_mocap_encode(time_usec=time.time(),q=[1, 0, 0, 0],x=0,y=0,z=0)
-
-#master.mav.att_pos_mocap_send(np.uint64(time.time()),[1.0, 0.0, 0.0, 0.0],0.0,0.0,0.0) #Time is epoch time
-
-
 class PoseSubscriber(Node): 
     master = mavutil.mavlink_connection("/dev/ttyUSB0", baud=57600)
     def __init__(self):
@@ -33,6 +18,16 @@ class PoseSubscriber(Node):
             '/qualisys/elvind/pose',  #Message type and topic 
             self.listener_callback,
             10)
+
+        
+        #super().__init__('covariance_subscriber')
+        #self.subscription = self.create_subscription(
+        #    'messagetype',              ##Message type??
+        #    '/qualisys/elvind/covariance',
+        #    self.listener_callback,
+        #    10)
+
+
 
     def init_connection(self):
         print("Waiting for connection")
@@ -60,18 +55,27 @@ class PoseSubscriber(Node):
     def listener_callback(self, msg):
         #self.get_logger().info(str(msg.pose.orientation))  #Here the data that the node receives is printed
         #Attitude
-        x_a = msg.pose.orientation.x
-        y_a = msg.pose.orientation.y
-        z_a = msg.pose.orientation.z
-        w_a = msg.pose.orientation.w
+
+        #Orientation (transformed from xyz to ned) Needs to be tested
+        x_a = -msg.pose.orientation.y
+        y_a = -msg.pose.orientation.z
+        z_a = msg.pose.orientation.w
+        w_a = msg.pose.orientation.x
         quat_a = [x_a,y_a,z_a,w_a]
         
-        #Pose
-        x_p = msg.pose.position.x
-        y_p = msg.pose.position.y
-        z_p = msg.pose.position.z        
+        #Pose (transformed from xyz to ned )
+        x_p = msg.pose.position.x  #North
+        y_p = msg.pose.position.z   #East       
+        z_p = -msg.pose.position.y  #Down
         time_u = np.uint64(time.time())
-        self.master.mav.att_pos_mocap_send(time_u,quat_a,x_p,y_p,z_p)
+
+        #If the covariance is known
+        #covariance_matrix = msg.covariance
+
+        #The ATT_POS_MOCAP message type demands covariance, if it is unknown we have to assign NaN to the first element in the array.
+        covariance_matrix = ['NaN'] #Needs to be tested 
+
+        self.master.mav.att_pos_mocap_send(time_u,quat_a,x_p,y_p,z_p,covariance_matrix)
         #self.master.mav.vision_position_estimate_send(time_u,x_p,y_p,z_p,x_a,y_a,z_a)
 
 
