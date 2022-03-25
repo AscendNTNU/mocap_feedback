@@ -3,17 +3,15 @@ import rospy
 from geometry_msgs.msg import PoseStamped
 from pymavlink import mavutil
 import time
-import tf2
+import tf2_ros
 import tf2_geometry_msgs
 
-master = mavutil.mavlink_connection("/dev/ttyACM2", baud=57600)
-
-
+master = mavutil.mavlink_connection("udpin:0.0.0.0:14551")
 
 def callback(msg: PoseStamped):
     #time_usec = int(msg.header.stamp.secs * 1e6 + msg.header.stamp.nsecs / 1e3)
     
-    transform = listener.lookup_transform(
+    transform = buffer.lookup_transform(
                                        # target frame:
                                        "local_ned",
                                        # source frame:
@@ -44,7 +42,8 @@ def set_origin():
 
 
 rospy.init_node("mocap_feedback")
-listener = tf2.TransformListener()
+buffer = tf2_ros.Buffer()
+listener = tf2_ros.TransformListener(buffer)
 rospy.Subscriber("/qualisys/elvind/pose", PoseStamped, callback)
 set_origin()
 rospy.spin()
