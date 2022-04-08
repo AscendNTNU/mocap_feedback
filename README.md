@@ -1,6 +1,12 @@
 # mocap_feedback
 Repo for the motion capture system (qualisys) in the drone hall. 
 
+## Prerequisites
+- Pymavlink is installed: https://github.com/ArduPilot/pymavlink
+- ROS is installed (only tested with noetic): http://wiki.ros.org/noetic/Installation/Ubuntu 
+- (For QGroundControl) MAVProxy is installed: https://ardupilot.org/mavproxy/docs/getting_started/download_and_installation.html
+
+
 ## How to use the system 
 - Start a `roscore`on your computer (Ubuntu). 
 
